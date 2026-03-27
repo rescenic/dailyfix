@@ -258,55 +258,112 @@ $devOtp   = $_SESSION['dev_otp']   ?? null;
         }
         .btn-tentang:hover { border-color:#0f4c81; color:#0f4c81; background:#eff6ff; }
 
-        /* Modal tentang */
+        /* Modal tentang — landscape 2 kolom */
         .modal-about-overlay {
-            position:fixed; inset:0; background:rgba(10,22,40,.65);
-            backdrop-filter:blur(4px); z-index:9999;
+            position:fixed; inset:0; background:rgba(10,22,40,.7);
+            backdrop-filter:blur(6px); z-index:9999;
             display:flex; align-items:center; justify-content:center;
-            padding:20px; opacity:0; pointer-events:none;
-            transition:opacity .25s;
+            padding:16px; opacity:0; pointer-events:none;
+            transition:opacity .3s;
         }
         .modal-about-overlay.open { opacity:1; pointer-events:all; }
+
+        /* Container landscape */
         .modal-about {
-            background:#fff; border-radius:20px; width:100%; max-width:440px;
-            max-height:90vh; overflow-y:auto;
-            box-shadow:0 28px 64px rgba(0,0,0,.3);
-            transform:translateY(24px) scale(.97);
-            transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+            background:#fff; border-radius:20px;
+            width:100%; max-width:860px;
+            max-height:92vh;
+            display:flex; flex-direction:row;
+            box-shadow:0 32px 80px rgba(0,0,0,.35);
+            overflow:hidden;
+            transform:scale(.96) translateY(16px);
+            transition:transform .3s cubic-bezier(.34,1.56,.64,1);
         }
-        .modal-about-overlay.open .modal-about { transform:translateY(0) scale(1); }
-        .modal-about-header {
-            background:linear-gradient(135deg,#0f4c81,#0a2d55);
-            padding:24px; border-radius:20px 20px 0 0; text-align:center; position:relative;
+        .modal-about-overlay.open .modal-about { transform:scale(1) translateY(0); }
+
+        /* Sidebar kiri */
+        .modal-sidebar {
+            width:230px; min-width:230px;
+            background:linear-gradient(160deg,#0f4c81 0%,#0a2d55 60%,#061a33 100%);
+            padding:28px 22px; display:flex; flex-direction:column;
+            align-items:center; text-align:center; position:relative; overflow:hidden;
         }
+        .modal-sidebar::before {
+            content:''; position:absolute; top:-60px; right:-60px;
+            width:180px; height:180px; border-radius:50%;
+            background:radial-gradient(circle,rgba(0,201,167,.2) 0%,transparent 70%);
+        }
+        .modal-sidebar::after {
+            content:''; position:absolute; bottom:-40px; left:-40px;
+            width:140px; height:140px; border-radius:50%;
+            background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 70%);
+        }
+        .sidebar-dots {
+            position:absolute; inset:0;
+            background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);
+            background-size:24px 24px;
+        }
+        .sidebar-content { position:relative; z-index:1; width:100%; }
         .modal-about-logo {
-            width:52px; height:52px; background:linear-gradient(135deg,#00c9a7,#0ea5e9);
+            width:56px; height:56px; background:linear-gradient(135deg,#00c9a7,#0ea5e9);
             border-radius:14px; display:inline-flex; align-items:center; justify-content:center;
-            font-size:24px; font-weight:900; color:#fff; margin-bottom:10px;
-            box-shadow:0 6px 20px rgba(0,201,167,.4);
+            font-size:26px; font-weight:900; color:#fff; margin-bottom:12px;
+            box-shadow:0 8px 24px rgba(0,201,167,.45);
         }
-        .modal-about-header h3 { color:#fff; font-size:18px; font-weight:800; margin:0 0 3px; }
-        .modal-about-header p  { color:rgba(255,255,255,.6); font-size:12px; margin:0; }
+        .sidebar-title { color:#fff; font-size:18px; font-weight:800; margin:0 0 3px; }
+        .sidebar-sub   { color:rgba(255,255,255,.55); font-size:11.5px; margin:0 0 20px; }
+
+        .sidebar-badge {
+            display:inline-flex; align-items:center; gap:6px;
+            background:rgba(0,201,167,.15); border:1px solid rgba(0,201,167,.35);
+            color:#00c9a7; padding:6px 12px; border-radius:20px;
+            font-size:11.5px; font-weight:700; margin-bottom:20px;
+        }
+        .sidebar-features { width:100%; display:flex; flex-direction:column; gap:8px; }
+        .sidebar-feat {
+            display:flex; align-items:center; gap:9px;
+            background:rgba(255,255,255,.07); border-radius:9px;
+            padding:8px 10px; font-size:12px; color:rgba(255,255,255,.8); text-align:left;
+        }
+        .sidebar-feat i { color:#00c9a7; width:14px; text-align:center; flex-shrink:0; }
+
+        .sidebar-copy {
+            margin-top:auto; padding-top:20px;
+            font-size:11px; color:rgba(255,255,255,.3); line-height:1.6;
+        }
+
+        /* Konten kanan */
+        .modal-main {
+            flex:1; overflow-y:auto; display:flex; flex-direction:column;
+            min-width:0;
+        }
+        .modal-main-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 24px; border-bottom:1px solid #f1f5f9; flex-shrink:0;
+        }
+        .modal-main-header h4 { font-size:15px; font-weight:800; color:#0f172a; margin:0; }
         .modal-x {
-            position:absolute; top:14px; right:16px;
-            background:rgba(255,255,255,.15); border:none; color:#fff;
-            width:28px; height:28px; border-radius:50%; cursor:pointer;
+            background:#f1f5f9; border:none; color:#64748b;
+            width:30px; height:30px; border-radius:8px; cursor:pointer;
             font-size:13px; display:flex; align-items:center; justify-content:center;
-            transition:background .2s;
+            transition:background .2s, color .2s; flex-shrink:0;
         }
-        .modal-x:hover { background:rgba(255,255,255,.3); }
-        .modal-about-body { padding:22px 24px; }
+        .modal-x:hover { background:#ef4444; color:#fff; }
+
+        .modal-main-body { padding:20px 24px; flex:1; }
+
         .about-sec-title {
             font-size:10.5px; font-weight:800; text-transform:uppercase;
             letter-spacing:1.5px; color:#94a3b8; margin-bottom:10px;
             display:flex; align-items:center; gap:7px;
         }
         .about-sec-title::after { content:''; flex:1; height:1px; background:#f1f5f9; }
+
         .about-free-badge {
             display:inline-flex; align-items:center; gap:7px;
             background:#f0fdf4; border:1.5px solid #bbf7d0;
-            color:#15803d; padding:9px 16px; border-radius:10px;
-            font-size:13px; font-weight:700; margin-bottom:10px;
+            color:#15803d; padding:7px 14px; border-radius:10px;
+            font-size:12.5px; font-weight:700; margin-bottom:10px;
         }
         .about-text { font-size:13px; color:#475569; line-height:1.75; margin:0 0 8px; }
         .about-warning {
@@ -315,41 +372,81 @@ $devOtp   = $_SESSION['dev_otp']   ?? null;
             font-size:12.5px; color:#991b1b;
             display:flex; gap:8px; align-items:flex-start; margin-bottom:18px;
         }
+
+        /* Donasi cards 2 kolom di landscape */
+        .donasi-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
         .donasi-card {
             border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 16px;
-            margin-bottom:10px; display:flex; align-items:center; gap:14px;
+            display:flex; flex-direction:column; gap:10px;
             transition:border-color .2s, box-shadow .2s;
         }
-        .donasi-card:last-child { margin-bottom:0; }
-        .donasi-card:hover { border-color:#0f4c81; box-shadow:0 3px 12px rgba(15,76,129,.1); }
+        .donasi-card:hover { border-color:#0f4c81; box-shadow:0 3px 16px rgba(15,76,129,.12); }
+        .donasi-card-top { display:flex; align-items:center; gap:10px; }
         .donasi-icon {
-            width:44px; height:44px; border-radius:12px; flex-shrink:0;
-            display:flex; align-items:center; justify-content:center; font-size:18px;
+            width:40px; height:40px; border-radius:10px; flex-shrink:0;
+            display:flex; align-items:center; justify-content:center; font-size:16px;
         }
         .donasi-icon.gopay { background:linear-gradient(135deg,#00aed6,#0070ba); }
         .donasi-icon.bsi   { background:linear-gradient(135deg,#00a650,#006633); }
         .donasi-info { flex:1; min-width:0; }
-        .donasi-label { font-size:11px; color:#94a3b8; font-weight:600; margin-bottom:2px; }
-        .donasi-value { font-size:14px; font-weight:800; color:#0f172a; font-family:'JetBrains Mono',monospace; }
+        .donasi-label { font-size:10.5px; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+        .donasi-value { font-size:15px; font-weight:900; color:#0f172a; font-family:'JetBrains Mono',monospace; }
         .donasi-name  { font-size:11.5px; color:#64748b; margin-top:1px; }
         .copy-btn {
-            background:#f1f5f9; border:none; color:#64748b;
-            padding:7px 11px; border-radius:8px; font-size:11px; font-weight:700;
-            cursor:pointer; font-family:inherit; flex-shrink:0;
+            width:100%; background:#f1f5f9; border:none; color:#64748b;
+            padding:8px; border-radius:8px; font-size:12px; font-weight:700;
+            cursor:pointer; font-family:inherit;
             transition:background .2s, color .2s;
+            display:flex; align-items:center; justify-content:center; gap:6px;
         }
         .copy-btn:hover  { background:#0f4c81; color:#fff; }
         .copy-btn.copied { background:#10b981; color:#fff; }
-        .modal-about-footer {
-            padding:14px 24px 20px; text-align:center;
-            border-top:1px solid #f1f5f9;
+
+        .modal-main-footer {
+            padding:14px 24px; border-top:1px solid #f1f5f9;
+            display:flex; align-items:center; justify-content:space-between;
+            flex-shrink:0; flex-wrap:wrap; gap:10px;
         }
+        .modal-main-footer span { font-size:11.5px; color:#94a3b8; }
         .close-about {
-            background:#f8fafc; border:1.5px solid #e2e8f0; color:#64748b;
-            padding:9px 24px; border-radius:10px; font-size:13px; font-weight:700;
-            cursor:pointer; font-family:inherit; transition:background .2s, border-color .2s;
+            background:#0f4c81; border:none; color:#fff;
+            padding:9px 22px; border-radius:10px; font-size:13px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:background .2s, transform .2s;
+            display:flex; align-items:center; gap:6px;
         }
-        .close-about:hover { background:#e2e8f0; border-color:#cbd5e1; }
+        .close-about:hover { background:#0a2d55; transform:translateY(-1px); }
+
+        /* ── Responsive HP (portrait) ── */
+        @media(max-width:640px) {
+            .modal-about {
+                flex-direction:column;
+                max-width:100%; max-height:95vh;
+                border-radius:16px;
+            }
+            .modal-sidebar {
+                width:100%; min-width:0;
+                padding:20px 20px 16px;
+                flex-direction:row; text-align:left; align-items:center; gap:14px;
+            }
+            .modal-sidebar::before, .modal-sidebar::after { display:none; }
+            .sidebar-features, .sidebar-copy { display:none; }
+            .sidebar-badge { margin-bottom:0; }
+            .modal-about-logo { width:42px; height:42px; font-size:18px; margin-bottom:0; flex-shrink:0; }
+            .sidebar-title { font-size:15px; }
+            .sidebar-sub   { margin-bottom:6px; }
+            .sidebar-content { display:flex; flex-direction:column; }
+            .donasi-grid { grid-template-columns:1fr; }
+        }
+
+        /* HP landscape (horizontal) */
+        @media(max-height:500px) and (orientation:landscape) {
+            .modal-about { max-height:96vh; }
+            .modal-sidebar { width:180px; min-width:180px; padding:16px 14px; }
+            .modal-about-logo { width:40px; height:40px; font-size:18px; }
+            .sidebar-title { font-size:15px; }
+            .sidebar-feat  { padding:6px 8px; font-size:11px; }
+            .modal-main-body { padding:14px 18px; }
+        }
 
         @media(max-width:820px) {
             .left-panel { display:none; }
@@ -498,91 +595,106 @@ $devOtp   = $_SESSION['dev_otp']   ?? null;
     </div>
 </div>
 
-<!-- ══ Modal Tentang Aplikasi ══ -->
+<!-- ══ Modal Tentang Aplikasi — Landscape ══ -->
 <div class="modal-about-overlay" id="modalAbout" onclick="if(event.target===this)closeAbout()">
     <div class="modal-about">
-        <div class="modal-about-header">
-            <button class="modal-x" onclick="closeAbout()"><i class="fas fa-xmark"></i></button>
-            <div class="modal-about-logo">D</div>
-            <h3>DailyFix</h3>
-            <p>Sistem Absensi Digital v1.0</p>
+
+        <!-- Sidebar Kiri -->
+        <div class="modal-sidebar">
+            <div class="sidebar-dots"></div>
+            <div class="sidebar-content">
+                <div class="modal-about-logo">D</div>
+                <div class="sidebar-title">DailyFix</div>
+                <div class="sidebar-sub">Sistem Absensi Digital v1.0</div>
+                <div class="sidebar-badge">
+                    <i class="fas fa-heart" style="color:#ef4444"></i> Gratis & Bebas
+                </div>
+                <div class="sidebar-features">
+                    <div class="sidebar-feat"><i class="fas fa-map-location-dot"></i> Absensi GPS</div>
+                    <div class="sidebar-feat"><i class="fas fa-camera"></i> Verifikasi Foto</div>
+                    <div class="sidebar-feat"><i class="fas fa-shield-halved"></i> Anti Fake GPS</div>
+                    <div class="sidebar-feat"><i class="fas fa-key"></i> Login OTP</div>
+                    <div class="sidebar-feat"><i class="fas fa-chart-bar"></i> Laporan Otomatis</div>
+                    <div class="sidebar-feat"><i class="fas fa-users"></i> Multi Pengguna</div>
+                </div>
+                <div class="sidebar-copy">
+                    © <?= date('Y') ?> DailyFix<br>Hak Cipta Dilindungi
+                </div>
+            </div>
         </div>
-        <div class="modal-about-body">
 
-            <!-- Tentang -->
-            <div class="about-sec-title"><i class="fas fa-circle-info" style="color:#0ea5e9"></i> Tentang</div>
-            <div class="about-free-badge">
-                <i class="fas fa-heart" style="color:#ef4444"></i>
-                Aplikasi Gratis & Open Source
-            </div>
-            <p class="about-text">
-                DailyFix adalah sistem absensi digital berbasis GPS dan verifikasi foto wajah yang dikembangkan secara independen oleh <strong>M. Wira Satria Buana, S.Kom</strong>.
-            </p>
-            <p class="about-text">
-                Aplikasi ini dibagikan secara <strong>gratis</strong> untuk membantu perusahaan dan organisasi mengelola kehadiran karyawan secara akurat dan modern.
-            </p>
-            <div class="about-warning">
-                <i class="fas fa-ban" style="flex-shrink:0;margin-top:1px"></i>
-                <div><strong>Larangan Keras:</strong> Aplikasi ini <strong>tidak boleh diperjualbelikan</strong> dalam bentuk apapun. Redistribusi komersial tanpa izin tertulis dari pengembang adalah pelanggaran hak cipta.</div>
+        <!-- Konten Kanan -->
+        <div class="modal-main">
+            <div class="modal-main-header">
+                <h4><i class="fas fa-circle-info" style="color:#0ea5e9;margin-right:6px"></i> Tentang Aplikasi</h4>
+                <button class="modal-x" onclick="closeAbout()"><i class="fas fa-xmark"></i></button>
             </div>
 
-            <!-- Fitur -->
-            <div class="about-sec-title"><i class="fas fa-star" style="color:#f59e0b"></i> Fitur Utama</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
-                <?php foreach([
-                    ['fas fa-map-location-dot','#0ea5e9','Absensi GPS'],
-                    ['fas fa-camera','#8b5cf6','Verifikasi Foto'],
-                    ['fas fa-shield-halved','#10b981','Anti Fake GPS'],
-                    ['fas fa-key','#f59e0b','Login OTP'],
-                    ['fas fa-chart-bar','#ef4444','Laporan Auto'],
-                    ['fas fa-users','#0f4c81','Multi User'],
-                ] as [$icon,$color,$label]): ?>
-                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border-radius:8px;font-size:12.5px;font-weight:600;color:#374151">
-                    <i class="<?= $icon ?>" style="color:<?= $color ?>;width:14px;text-align:center"></i> <?= $label ?>
+            <div class="modal-main-body">
+
+                <!-- Info bebas -->
+                <div class="about-sec-title"><i class="fas fa-info" style="color:#0ea5e9"></i> Informasi</div>
+                <div class="about-free-badge">
+                    <i class="fas fa-heart" style="color:#ef4444"></i> Aplikasi Gratis & Open Source
                 </div>
-                <?php endforeach; ?>
+                <p class="about-text">
+                    DailyFix dikembangkan secara independen oleh <strong>M. Wira Satria Buana, S.Kom</strong> dan dibagikan secara <strong>gratis</strong> untuk membantu perusahaan dan organisasi mengelola kehadiran karyawan secara akurat dan modern.
+                </p>
+                <div class="about-warning">
+                    <i class="fas fa-ban" style="flex-shrink:0;margin-top:1px"></i>
+                    <div><strong>Larangan Keras:</strong> Aplikasi ini <strong>tidak boleh diperjualbelikan</strong> dalam bentuk apapun. Redistribusi komersial tanpa izin tertulis dari pengembang adalah pelanggaran hak cipta.</div>
+                </div>
+
+                <!-- Donasi -->
+                <div class="about-sec-title"><i class="fas fa-hand-holding-heart" style="color:#ef4444"></i> Dukung Pengembang</div>
+                <p class="about-text" style="margin-bottom:12px">Jika aplikasi ini bermanfaat, Anda bisa mendukung pengembangan melalui donasi sukarela 🙏</p>
+
+                <div class="donasi-grid">
+                    <!-- GoPay -->
+                    <div class="donasi-card">
+                        <div class="donasi-card-top">
+                            <div class="donasi-icon gopay">
+                                <span style="color:#fff;font-weight:900;font-size:13px">GP</span>
+                            </div>
+                            <div class="donasi-info">
+                                <div class="donasi-label">GoPay</div>
+                                <div class="donasi-value">082177846209</div>
+                                <div class="donasi-name">M. Wira Satria Buana</div>
+                            </div>
+                        </div>
+                        <button class="copy-btn" onclick="copyText('082177846209', this)">
+                            <i class="fas fa-copy"></i> Salin Nomor
+                        </button>
+                    </div>
+
+                    <!-- BSI -->
+                    <div class="donasi-card">
+                        <div class="donasi-card-top">
+                            <div class="donasi-icon bsi">
+                                <span style="color:#fff;font-weight:900;font-size:11px;letter-spacing:-1px">BSI</span>
+                            </div>
+                            <div class="donasi-info">
+                                <div class="donasi-label">Bank BSI</div>
+                                <div class="donasi-value">7134197557</div>
+                                <div class="donasi-name">M. Wira Satria Buana</div>
+                            </div>
+                        </div>
+                        <button class="copy-btn" onclick="copyText('7134197557', this)">
+                            <i class="fas fa-copy"></i> Salin Rekening
+                        </button>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Donasi -->
-            <div class="about-sec-title"><i class="fas fa-hand-holding-heart" style="color:#ef4444"></i> Dukung Pengembang</div>
-            <p class="about-text" style="margin-bottom:12px">Jika aplikasi ini bermanfaat, Anda bisa mendukung pengembangan melalui donasi sukarela:</p>
-
-            <div class="donasi-card">
-                <div class="donasi-icon gopay">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Gopay_logo.svg/120px-Gopay_logo.svg.png"
-                         alt="GoPay" style="width:28px;height:auto;filter:brightness(0) invert(1)" onerror="this.outerHTML='<span style=\'color:#fff;font-weight:900;font-size:14px\'>G</span>'">
-                </div>
-                <div class="donasi-info">
-                    <div class="donasi-label">GoPay</div>
-                    <div class="donasi-value">082177846209</div>
-                    <div class="donasi-name">M. Wira Satria Buana</div>
-                </div>
-                <button class="copy-btn" onclick="copyText('082177846209', this)">
-                    <i class="fas fa-copy"></i> Salin
+            <div class="modal-main-footer">
+                <span>© <?= date('Y') ?> DailyFix — Develop M. Wira Sb. S.Kom</span>
+                <button class="close-about" onclick="closeAbout()">
+                    <i class="fas fa-xmark"></i> Tutup
                 </button>
             </div>
-
-            <div class="donasi-card">
-                <div class="donasi-icon bsi">
-                    <span style="color:#fff;font-weight:900;font-size:11px;letter-spacing:-1px">BSI</span>
-                </div>
-                <div class="donasi-info">
-                    <div class="donasi-label">Bank BSI</div>
-                    <div class="donasi-value">7134197557</div>
-                    <div class="donasi-name">M. Wira Satria Buana</div>
-                </div>
-                <button class="copy-btn" onclick="copyText('7134197557', this)">
-                    <i class="fas fa-copy"></i> Salin
-                </button>
-            </div>
-
         </div>
-        <div class="modal-about-footer">
-            <div style="font-size:11.5px;color:#94a3b8;margin-bottom:10px">
-                © <?= date('Y') ?> DailyFix — Hak Cipta Dilindungi
-            </div>
-            <button class="close-about" onclick="closeAbout()">Tutup</button>
-        </div>
+
     </div>
 </div>
 
