@@ -266,15 +266,7 @@ include __DIR__ . '/../includes/header.php';
 }
 </style>
 
-<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <div>
-        <h2>Data Karyawan</h2>
-        <p>Kelola data seluruh karyawan perusahaan</p>
-    </div>
-    <button class="btn btn-primary" onclick="openModal()">
-        <i class="fas fa-user-plus"></i> Tambah Karyawan
-    </button>
-</div>
+
 
 <!-- Banner pending aktivasi -->
 <?php if ($pendingCount > 0): ?>

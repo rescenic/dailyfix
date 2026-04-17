@@ -10,33 +10,74 @@ $errors  = [];
 $success = false;
 $db      = getDB();
 
-// ✅ FIX: perusahaan_id = 5 (sebelumnya hardcode = 1)
-$jabatanList    = $db->query("SELECT id, nama FROM jabatan    WHERE perusahaan_id = 5 ORDER BY nama ASC")->fetchAll();
-$departemenList = $db->query("SELECT id, nama FROM departemen WHERE perusahaan_id = 5 ORDER BY nama ASC")->fetchAll();
+// ─── Tentukan perusahaan_id secara dinamis & aman ───────────────────────────
+$perusahaan_id = 1; // fallback default
 
+try {
+    // Ambil perusahaan_id dari tabel jabatan yang punya data terbanyak
+    $rowP = $db->query("
+        SELECT perusahaan_id, COUNT(*) as total
+        FROM jabatan
+        GROUP BY perusahaan_id
+        ORDER BY total DESC
+        LIMIT 1
+    ")->fetch();
+
+    if ($rowP && (int)$rowP['perusahaan_id'] > 0) {
+        $perusahaan_id = (int)$rowP['perusahaan_id'];
+    }
+} catch (Exception $e) {
+    $perusahaan_id = 1; // tetap fallback jika query gagal
+}
+
+// ─── Ambil jabatan & departemen berdasarkan perusahaan_id ───────────────────
+$jabatanList = [];
+try {
+    $stmt = $db->prepare("SELECT id, nama FROM jabatan WHERE perusahaan_id = ? ORDER BY nama ASC");
+    $stmt->execute([$perusahaan_id]);
+    $jabatanList = $stmt->fetchAll();
+} catch (Exception $e) {
+    $jabatanList = [];
+}
+
+$departemenList = [];
+try {
+    $stmt = $db->prepare("SELECT id, nama FROM departemen WHERE perusahaan_id = ? ORDER BY nama ASC");
+    $stmt->execute([$perusahaan_id]);
+    $departemenList = $stmt->fetchAll();
+} catch (Exception $e) {
+    $departemenList = [];
+}
+
+// ─── Handle POST ─────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama         = sanitize($_POST['nama']         ?? '');
-    $nik          = sanitize($_POST['nik']          ?? '');
-    $email        = sanitize($_POST['email']        ?? '');
-    $telepon      = sanitize($_POST['telepon']      ?? '');
-    $jabatan_id   = (int)($_POST['jabatan_id']      ?? 0);
-    $departemen_id= (int)($_POST['departemen_id']   ?? 0);
+    $nama          = sanitize($_POST['nama']          ?? '');
+    $nik           = sanitize($_POST['nik']           ?? '');
+    $email         = sanitize($_POST['email']         ?? '');
+    $telepon       = sanitize($_POST['telepon']       ?? '');
+    $jabatan_id    = (int)($_POST['jabatan_id']       ?? 0);
+    $departemen_id = (int)($_POST['departemen_id']    ?? 0);
 
+    // Validasi
     if (!$nama)   $errors[] = 'Nama lengkap wajib diisi.';
     if (!$nik)    $errors[] = 'NIK wajib diisi.';
     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Email tidak valid.';
     if (!$jabatan_id)    $errors[] = 'Pilih jabatan Anda.';
     if (!$departemen_id) $errors[] = 'Pilih departemen Anda.';
 
+    // Cek duplikat email / NIK
     if (empty($errors)) {
-        $cek = $db->prepare("SELECT id FROM karyawan WHERE email=? OR nik=?");
-        $cek->execute([$email, $nik]);
-        if ($cek->fetch()) $errors[] = 'Email atau NIK sudah terdaftar.';
+        try {
+            $cek = $db->prepare("SELECT id FROM karyawan WHERE email = ? OR nik = ?");
+            $cek->execute([$email, $nik]);
+            if ($cek->fetch()) $errors[] = 'Email atau NIK sudah terdaftar.';
+        } catch (Exception $e) {
+            $errors[] = 'Gagal memverifikasi data: ' . $e->getMessage();
+        }
     }
 
+    // Insert karyawan
     if (empty($errors)) {
-        // ✅ FIX: perusahaan_id = 5 (sebelumnya hardcode = 1)
-        $perusahaan_id = 5;
         try {
             $cols = $db->query("SHOW COLUMNS FROM karyawan")->fetchAll(PDO::FETCH_COLUMN);
 
@@ -45,10 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $values = [$perusahaan_id, $nik, $nama, $email, $telepon, 'karyawan', 'nonaktif', date('Y-m-d')];
 
             if (in_array('jabatan_id', $cols) && $jabatan_id) {
-                $fields[] = 'jabatan_id'; $values[] = $jabatan_id;
+                $fields[] = 'jabatan_id';
+                $values[] = $jabatan_id;
             }
             if (in_array('departemen_id', $cols) && $departemen_id) {
-                $fields[] = 'departemen_id'; $values[] = $departemen_id;
+                $fields[] = 'departemen_id';
+                $values[] = $departemen_id;
             }
             if (in_array('password', $cols)) {
                 $fields[] = 'password';
@@ -59,12 +102,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->prepare("INSERT INTO karyawan (" . implode(',', $fields) . ") VALUES ($placeholders)")
                ->execute($values);
 
-            // ── Kirim email notifikasi pendaftaran ke user ──
+            // ── Ambil nama jabatan & departemen untuk email ──────────────────
             $jabatanNama    = '';
             $departemenNama = '';
             foreach ($jabatanList    as $j) { if ($j['id'] == $jabatan_id)    $jabatanNama    = $j['nama']; }
             foreach ($departemenList as $d) { if ($d['id'] == $departemen_id) $departemenNama = $d['nama']; }
 
+            // ── Body email notifikasi ────────────────────────────────────────
             $emailBody = '
             <div style="font-family:\'Plus Jakarta Sans\',Arial,sans-serif;max-width:520px;margin:0 auto">
                 <div style="background:linear-gradient(135deg,#0f4c81,#0a2d55);padding:28px;border-radius:12px 12px 0 0;text-align:center">
@@ -99,16 +143,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>';
 
-            // ✅ FIX: perusahaan_id = 5 (sebelumnya hardcode = 1)
-            $smtpStmt = $db->prepare("SELECT * FROM smtp_settings WHERE perusahaan_id=? AND is_active=1 LIMIT 1");
-            $smtpStmt->execute([$perusahaan_id]);
-            if ($smtpStmt->fetch()) {
-                sendSmtpEmail($db, $perusahaan_id, $email, 'Pendaftaran DailyFix Berhasil — Menunggu Aktivasi', $emailBody);
+            // ── Kirim email jika SMTP aktif ──────────────────────────────────
+            try {
+                $smtpStmt = $db->prepare("SELECT id FROM smtp_settings WHERE perusahaan_id = ? AND is_active = 1 LIMIT 1");
+                $smtpStmt->execute([$perusahaan_id]);
+                if ($smtpStmt->fetch()) {
+                    sendSmtpEmail($db, $perusahaan_id, $email, 'Pendaftaran DailyFix Berhasil — Menunggu Aktivasi', $emailBody);
+                }
+            } catch (Exception $e) {
+                // Gagal kirim email tidak membatalkan registrasi
             }
 
             $success = true;
+
         } catch (Exception $e) {
-            $errors[] = 'Error: ' . $e->getMessage();
+            $errors[] = 'Gagal menyimpan data: ' . $e->getMessage();
         }
     }
 }
@@ -292,9 +341,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: transform .2s, box-shadow .2s;
         }
         .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(15,76,129,.4); }
+        .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
         .form-footer { margin-top: 18px; text-align: center; font-size: 12px; color: #94a3b8; }
         .form-footer a { color: #0f4c81; font-weight: 600; text-decoration: none; }
+
+        /* Warning: tidak ada data jabatan/departemen */
+        .no-data-warn {
+            display: flex; align-items: center; gap: 8px;
+            background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #f97316;
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 12.5px; color: #9a3412; margin-bottom: 14px;
+        }
 
         @media(max-width:820px) {
             .left-panel { display: none; }
@@ -314,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<!-- Left panel -->
+<!-- ══ Left Panel ══════════════════════════════════════════════════════════ -->
 <div class="left-panel">
     <div class="dots-grid"></div>
     <div class="brand-content">
@@ -345,10 +403,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<!-- Right panel -->
+<!-- ══ Right Panel ═════════════════════════════════════════════════════════ -->
 <div class="right-panel">
 
 <?php if ($success): ?>
+
+    <!-- ── Sukses ── -->
     <div class="success-wrap">
         <div class="success-icon"><i class="fas fa-envelope-circle-check"></i></div>
         <h2>Pendaftaran Berhasil! 🎉</h2>
@@ -361,7 +421,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-clock"></i> Menunggu Aktivasi Admin
             </div>
             <p style="font-size:13px;color:#92400e;margin:0;line-height:1.65">
-                Akun Anda perlu diaktifkan oleh admin terlebih dahulu sebelum bisa login. Anda akan menerima email pemberitahuan begitu akun diaktifkan.
+                Akun Anda perlu diaktifkan oleh admin terlebih dahulu sebelum bisa login.
+                Anda akan menerima email pemberitahuan begitu akun diaktifkan.
             </p>
         </div>
         <a href="<?= APP_URL ?>/login.php"
@@ -377,6 +438,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php else: ?>
 
+    <!-- ── Form Registrasi ── -->
     <div class="form-header">
         <h2>Buat akun baru ✨</h2>
         <p>Isi data diri Anda untuk mendaftar ke DailyFix</p>
@@ -390,11 +452,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if (!empty($errors)): ?>
     <div class="alert-error">
         <i class="fas fa-circle-exclamation" style="flex-shrink:0;margin-top:1px"></i>
-        <ul><?php foreach($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
+        <ul><?php foreach ($errors as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
     </div>
     <?php endif; ?>
 
-    <form method="POST" autocomplete="off">
+    <?php if (empty($jabatanList) || empty($departemenList)): ?>
+    <div class="no-data-warn">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>Belum ada data <?= empty($jabatanList) ? 'jabatan' : '' ?><?= (empty($jabatanList) && empty($departemenList)) ? ' &amp; ' : '' ?><?= empty($departemenList) ? 'departemen' : '' ?>. Hubungi admin untuk menambahkan data terlebih dahulu.</span>
+    </div>
+    <?php endif; ?>
+
+    <form method="POST" autocomplete="off" id="regForm">
 
         <div class="section-divider">Data Diri</div>
 
@@ -439,18 +508,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <div class="section-divider">Posisi & Departemen</div>
+        <div class="section-divider">Posisi &amp; Departemen</div>
 
         <div class="form-grid-2">
             <div class="input-group">
                 <label>Jabatan <span class="req">*</span></label>
                 <div class="input-field">
                     <span class="icon"><i class="fas fa-briefcase"></i></span>
-                    <select name="jabatan_id" required>
+                    <select name="jabatan_id" required <?= empty($jabatanList) ? 'disabled' : '' ?>>
                         <option value="">— Pilih Jabatan —</option>
                         <?php foreach ($jabatanList as $j): ?>
                         <option value="<?= $j['id'] ?>"
-                            <?= ($_POST['jabatan_id'] ?? '') == $j['id'] ? 'selected' : '' ?>>
+                            <?= (($_POST['jabatan_id'] ?? '') == $j['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($j['nama']) ?>
                         </option>
                         <?php endforeach; ?>
@@ -465,11 +534,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label>Departemen <span class="req">*</span></label>
                 <div class="input-field">
                     <span class="icon"><i class="fas fa-building"></i></span>
-                    <select name="departemen_id" required>
+                    <select name="departemen_id" required <?= empty($departemenList) ? 'disabled' : '' ?>>
                         <option value="">— Pilih Departemen —</option>
                         <?php foreach ($departemenList as $d): ?>
                         <option value="<?= $d['id'] ?>"
-                            <?= ($_POST['departemen_id'] ?? '') == $d['id'] ? 'selected' : '' ?>>
+                            <?= (($_POST['departemen_id'] ?? '') == $d['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($d['nama']) ?>
                         </option>
                         <?php endforeach; ?>
@@ -482,9 +551,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <button type="submit" class="btn-submit">
+        <button type="submit" class="btn-submit" id="btnSubmit"
+            <?= (empty($jabatanList) || empty($departemenList)) ? 'disabled' : '' ?>>
             <i class="fas fa-user-plus"></i> Buat Akun
         </button>
+
     </form>
 
     <div class="form-footer">
@@ -495,6 +566,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php endif; ?>
 </div>
+
+<script>
+// Prevent double submit
+document.getElementById('regForm')?.addEventListener('submit', function () {
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+});
+</script>
 
 </body>
 </html>
